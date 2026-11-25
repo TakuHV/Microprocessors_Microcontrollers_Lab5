@@ -9,10 +9,8 @@
 
 #include "global.h"
 
-/* ============= HẰNG SỐ ============= */
-#define TIMEOUT_DURATION 6000   // Timeout 3 giây (3000ms)
+#define TIMEOUT_DURATION 3000
 
-/* ============= ĐỊNH NGHĨA TRẠNG THÁI FSM ============= */
 typedef enum {
     COMM_IDLE,        // Trạng thái chờ
     COMM_WAIT_RST,    // Chờ lệnh !RST#
@@ -20,7 +18,6 @@ typedef enum {
     COMM_TIMEOUT      // Xử lý timeout
 } CommunicationState;
 
-/* ============= KHAI BÁO HÀM ============= */
 
 /**
  * @brief Khởi tạo communication FSM

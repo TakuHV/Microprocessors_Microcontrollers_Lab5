@@ -78,51 +78,34 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
  */
 int main(void)
 {
-    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     HAL_Init();
-
-    /* Configure the system clock */
     SystemClock_Config();
 
-    /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_USART2_UART_Init();
     MX_ADC1_Init();
 
-    // === KHỞI TẠO CÁC MODULE ===
-    command_parser_init();     // Khởi tạo command parser FSM
-    uart_communication_init(); // Khởi tạo communication FSM
-    sensor_init();             // Khởi tạo ADC (continuous mode)
+    command_parser_init();
+    uart_communication_init();
+    sensor_init();
 
-    // Kích hoạt UART interrupt để bắt đầu nhận dữ liệu
     HAL_UART_Receive_IT(&huart2, &temp, 1);
 
-    // Khởi tạo LED timer
     led_timer = HAL_GetTick();
 
     while (1)
     {
-        // === BƯỚC 1: Xử lý buffer khi có dữ liệu mới ===
         if (buffer_flag == 1)
         {
-            // *** Chạy command parser FSM để phân tích lệnh
             command_parser_fsm();
-            // Clear flag
             buffer_flag = 0;
         }
-
-        // === BƯỚC 2: Chạy communication FSM ===
-        // ****FSM này chạy liên tục để xử lý giao thức
         uart_communication_fsm();
-
-        // === BƯỚC 3: LED BLINKING ===
-        // Lấy trạng thái hiện tại của giao thức
         CommunicationState state = get_communication_state();
 
         switch (state)
         {
         case COMM_WAIT_RST:
-            // Nhấp nháy CHẬM (500ms) - Đang chờ lệnh RST
             if (HAL_GetTick() - led_timer >= 500)
             {
                 HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
@@ -131,7 +114,6 @@ int main(void)
             break;
 
         case COMM_WAIT_OK:
-            // Nhấp nháy NHANH (100ms) - Đang chờ xác nhận OK
             if (HAL_GetTick() - led_timer >= 100)
             {
                 HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
@@ -140,7 +122,6 @@ int main(void)
             break;
 
         case COMM_TIMEOUT:
-            // Nhấp nháy RẤT NHANH (50ms) - Timeout, đang gửi lại
             if (HAL_GetTick() - led_timer >= 50)
             {
                 HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
@@ -149,7 +130,6 @@ int main(void)
             break;
 
         default:
-            // Sáng liên tục - Lỗi không xác định
             HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
             break;
         }
